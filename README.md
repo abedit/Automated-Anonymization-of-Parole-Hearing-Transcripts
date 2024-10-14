@@ -54,7 +54,7 @@ You can use the [requirements.txt](requirements.txt) file to install them by run
     pip install -r requirements.txt
 
 ## ❗Downloading Facebook's BART model❗
-Please download `pytorch_model.bin` file from the official website for BART on huggingface [here](https://huggingface.co/facebook/bart-large-mnli/blob/main/pytorch_model.bin) and place it in the `_Resources/facebook_bart_large_mnli/` folder on your local device. This is the Facebook model BART that is crucial for the pseudonymization process of the NRP and LOCATION entities.
+Please download `pytorch_model.bin` file from the official website for BART on huggingface [here](https://huggingface.co/facebook/bart-large-mnli/resolve/main/pytorch_model.bin) and place it in the `_Resources/facebook_bart_large_mnli/` folder on your local device. This is the Facebook model BART that is crucial for the pseudonymization process of the NRP and LOCATION entities.
 
 # How to run the programs:
 
