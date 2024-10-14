@@ -4,8 +4,8 @@
 
 ## Table of Contents
 
-- [This project in a nutshell (A brief summary)](#this-project-in-a-nutshell-a-brief-summary)
-- [Packages to install first](#packages-to-install-first)
+- [A brief summary of this project](#a-brief-summary-of-this-project)
+- [Pre-requisite steps](#pre-requisite-steps)
 - [How to run the programs](#how-to-run-the-programs)
   - [Converting the transcript files into text files](#converting-the-transcript-files-into-text-files)
   - [Running the NER tools](#running-the-ner-tools)
@@ -18,7 +18,7 @@
 
 --- 
 
-## This project in a nutshell (A brief summary)
+## A brief summary of this project
 3 main files:
 * [HearingsPDFs2Text.py](HearingsPDFs2Text.py) - convert transcripts from PDF to txt files
 * [GatherAnnotations.py](GatherAnnotations.py) - Run the automatic annotation on every transcript text file
@@ -32,7 +32,7 @@ Pseudonymization method implemented, with the focus of keeping the text around t
 
 ---
 
-# Packages to install first:
+# Pre-requisite steps:
 The project was done on Windows 11 with Python version `3.10.11`. `pip` version used is `23.1.2`.
 The libraries used are the following:
 
@@ -54,7 +54,7 @@ You can use the [requirements.txt](requirements.txt) file to install them by run
     pip install -r requirements.txt
 
 ## ❗Downloading Facebook's BART model❗
-Please download `pytorch_model.bin` file from the official website for BART on huggingface [here](https://huggingface.co/facebook/bart-large-mnli/resolve/main/pytorch_model.bin) and place it in the `_Resources/facebook_bart_large_mnli/` folder on your local device. This is the Facebook model BART that is crucial for the pseudonymization process of the NRP and LOCATION entities.
+Please download `pytorch_model.bin` file from the official website for BART on huggingface [here](https://huggingface.co/facebook/bart-large-mnli/resolve/main/pytorch_model.bin) and place it in the `_Resources/facebook_bart_large_mnli/` folder on your local device. This is the zero-shot classification model BART by Facebook that is crucial for the pseudonymization process of the NRP and LOCATION entities.
 
 # How to run the programs:
 
