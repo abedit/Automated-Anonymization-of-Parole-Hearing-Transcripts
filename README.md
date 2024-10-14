@@ -22,7 +22,7 @@
 3 main files:
 * [HearingsPDFs2Text.py](HearingsPDFs2Text.py) - convert transcripts from PDF to txt files
 * [GatherAnnotations.py](GatherAnnotations.py) - Run the automatic annotation on every transcript text file
-* [Anonymization.py](Anonymization.py) - Apply given anonymization methods on the transcript texts
+* [Anonymization.py](Anonymization.py) - Apply the pseudonymization method on the transcript texts using the annotations that come from running  [GatherAnnotations.py](GatherAnnotations.py)
 
 3 NER tools (Presidio, spaCy and StanfordNER) + Regular expressions are used on transcripts coming from the California Department of Corrections and Rehabilitation (CDCR) to detect personally identifiable information as annotations. The transcripts have a consistent format that allows the extraction of information from the first page.
 
