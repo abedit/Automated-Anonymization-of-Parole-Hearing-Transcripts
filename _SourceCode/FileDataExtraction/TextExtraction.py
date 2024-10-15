@@ -30,7 +30,7 @@ def write_pdfs_into_txt_files(input_directory, output_directory):
                 text_file.write(extracted_text)
             print("Processed ", filename, " -> ", os.path.basename(output_file_path))
 
-    if corrupted_files: # output the list of files that are corrupted
+    if corrupted_files:  # output the list of files that are corrupted
         print("\n\nThe following files were detected as corrupted: ")
         for item in corrupted_files:
             print(item)
@@ -69,7 +69,7 @@ def extract_text_from_txt_file_directory(directory, file_name):
 
 def pdf_to_text(pdf_path):
     """
-    This function is customized towards the hearing files
+    This function is customized towards the hearing transcript files from the CDCR
     Get text from the PDF file with some added logic for the 2nd page and the last 2 pages.
     The main text will be cleaned so that each utterance is on 1 line.
     2nd page is the index which isn't important so it's skipped
@@ -206,5 +206,4 @@ def is_pdf_corrupted(file_path):
                 _ = page.extract_text()
         return False
     except IOError:
-        print(file_path + " is most likely corrupted.")
         return True

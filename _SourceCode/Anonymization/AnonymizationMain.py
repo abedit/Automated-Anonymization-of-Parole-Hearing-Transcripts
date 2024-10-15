@@ -15,8 +15,7 @@ def anonymization_entry_point():
     json_file = os.path.join(Constants.output_json_directory, Constants.output_json_file)
 
     if not os.path.exists(json_file):
-        print(
-            f'The file {json_file} does not exist. Did you run the GatherAnnotations.py on the content of ./hearing_txt ?')
+        print(f'The file {json_file} does not exist. Please run GatherAnnotations.py.')
         return
 
     json_data = convert_dict_to_annotation(get_data_from_annotation_json())
@@ -29,7 +28,7 @@ def anonymization_entry_point():
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
-    # Call the appropriate anonymization method based on the method provided
+    # Call the appropriate Pseudonymization method
     Pseudonymization.anonymize(output_directory, json_data)
 
 

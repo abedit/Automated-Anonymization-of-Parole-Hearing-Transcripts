@@ -6,7 +6,7 @@
 
 - [A brief summary of this project](#a-brief-summary-of-this-project)
 - [Pre-requisite steps](#pre-requisite-steps)
-- [How to run the programs](#how-to-run-the-programs)
+- [How to run the programs](#how-to-run-the-project)
   - [Converting the transcript files into text files](#converting-the-transcript-files-into-text-files)
   - [Running the NER tools](#running-the-ner-tools)
   - [Applying the Pseudonymization method](#applying-the-pseudonymization-method)
@@ -56,25 +56,23 @@ You can use the [requirements.txt](requirements.txt) file to install them by run
 ## ❗Downloading Facebook's BART model❗
 Please download `pytorch_model.bin` file from the official website for BART on huggingface [here](https://huggingface.co/facebook/bart-large-mnli/resolve/main/pytorch_model.bin) and place it in the `_Resources/facebook_bart_large_mnli/` folder on your local device. This is the zero-shot classification model BART by Facebook that is crucial for the pseudonymization process of the NRP and LOCATION entities.
 
-# How to run the programs:
+# How to run the project:
 
-This section explains how to run the thesis program.
-There are 3 main classes that can be run with each having a pre-condition that needs to be satisfied.
+This section explains how to run the project.
+There are **3** main classes that can be run with each having a pre-condition that needs to be satisfied.
 
 ## Converting the transcript files into text files
-The purpose of [HearingsPDFs2Text.py](HearingsPDFs2Text.py) is to convert hearing PDF files into text files (txt file format) with each utterance being on a single line and ignoring the second page as it's only the index and does not have important information.
+The purpose of [HearingsPDFs2Text.py](HearingsPDFs2Text.py) is to convert transcripts PDF files into text files (txt file format) with each utterance being on a single line and ignoring the second page as it's only the index and does not have important information.
+
+**Please note the program does not automatically know if the second page actually contains valid information. It is discarded because the format of parole hearing transcripts from the CDCR consistently have the second page as index.**
 
 ### Command to run [HearingsPDFs2Text.py](HearingsPDFs2Text.py):
 
     python HearingsPDFs2Text.py
 
-### Pre-condition
-Must have a folder named `Hearing transcripts (PDF)` in the project directory with the parole hearing transcripts inside as PDF files.
-
-### Output
-A folder named `Hearing transcripts (Text)` is created containing the parole hearing transcripts converted to text files. 
-
-
+| Pre-condition                                                                                                                          | Output                                                                                                                    | 
+|----------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| Must have a folder named `Hearing transcripts (PDF)` in the project directory with the parole hearing transcripts inside as PDF files. | A folder named `Hearing transcripts (Text)` is created containing the parole hearing transcripts converted to text files. |
 
 ---
 
@@ -85,27 +83,13 @@ Running [GatherAnnotations.py](GatherAnnotations.py) file will initialize and ap
 
     python GatherAnnotations.py
 
-**❗NOTE ❗:** It is possible to pass an argument to have the automatic annotation process more than 1 file at a time. It can be done by passing the flag `--file_count` and the number of files to process at a time.
 
-    python GatherAnnotations.py --file_count 3
-
-`file_count` has a maximum value of 5 files, as processing 5 or more files at the same time will cause the device to lag and become slow. 
-
-I recommend to process 3 files at a time as it does not slow the PC a lot and it results in a **very slightly** faster processing time vs processing 1 file at a time.
-
-If you're unsure how much to pass in the argument, a value of 1 doesn't hurt.
+| Pre-condition                                                                                                                          | Output                                                                                                                                                                                                                                                                                                                                                                          | 
+|----------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Must have the `Hearing transcripts (Text)` folder in the project directory with the parole hearing transcripts as text files inside. | 2 folders, `Annotations Output` and `Annotations JSON`, are created. The `Annotations JSON` folder contains a json file that has data about each transcript file name and its detected annotations. The json file is named `processed_annotations.json`. It will contain data for the anonymization process to run. More information about the `Annotations Output` file below. |
 
 
-### Pre-condition
-
-Must have the `Hearing transcripts (Text)` folder in the project directory with the parole hearing transcripts as text files inside.
-
-### Output
-2 folders, `Annotations Output` and `Annotations JSON`, are created. The `Annotations JSON` folder contains a json file that has data about each transcript file name and its detected annotations. 
-
-This json file is named `processed_annotations.json`. Whenever new annotation data comes in, it is appended in the json file as to not lose previous data. If new annotations come in for a file that already has annotations, the new annotations will override the old ones.
-
-For instance, if the automatic annotation process is run on 3 hearing files, then the json will contain the annotations for the 3 hearing files. If the process is run on an extra file, the json will contain data about the 4 hearing files. Finally, if the process is run on a file that has already been processed, the new annotation data replaces the old data based on the name of the file.
+ Whenever new annotation data comes in, it is appended in the json file as to not lose previous data. If new annotations come in for a file that already has annotations, the new annotations will override the old ones.
 
 Here is what the json structure looks like:
 
@@ -131,7 +115,7 @@ Here is what the json structure looks like:
 
 
 The `Annotations Output` folder contains the detected annotation for each file. Running the NER tools on a single transcript will create the following text files:
-* A file with the same name as the original transcript with the detected annotations inserted into the original text. For example, if "Mr Michael Jordan" is present in the original transcript file, this file will have "Mr [Michael Jordan | PERSON]" with the label type present next to the detected annotations. This file is done to review the detected annotations from the original file.
+* A file with the same name as the original transcript with the detected annotations inserted into the original text. For example, if "Mr Michael Jordan" is present in the original transcript file, this file will have "Mr [Michael Jordan | PERSON]" with the label type present next to the detected annotations. This file is created to review the detected annotations from the original file.
 * A file having the same name as the original transcript file but with `_ANNOTATIONS` appended at the end. The `GatherAnnotations.py` returns a list of [Annotation](_SourceCode/ModelClasses/Annotation.py) objects for each transcript. This file lists the content of each Annotation object such as the start position in the hearing text file, the end position, label type, text and NER tool source for each annotation detected.
 * A file having the same name as the original but with `_STATS` appended at the end. This file contains the number of correct annotations detected in the original transcript text file, the number of filtered out annotations and they are then listed in the same `_STATS` file.
 
@@ -153,19 +137,14 @@ For example, the following is an illustration of what the project's directory tr
 ---
 
 ## Applying the Pseudonymization method
-The [Anonymization.py](Anonymization.py) file serves as an entry point for the anonymization methods. This file requires an argument to specify which anonymization method to use on the hearing transcript files.
+The [Anonymization.py](Anonymization.py) file serves as an entry point for the pseudonymization method on the hearing transcript files.
 
 ### Command to run `Anonymization.py`
     python Anonymization.py 
 
-## Pre-condition
-Must have the json file inside `Annotations JSON` folder that is created from running the [GatheringAnnotations.py](GatherAnnotations.py) file.
-
-## Output
-A folder named `Anonymization Output` is created. Running an anonymization method creates a folder inside the `Anonymization Output` folder named `anonymization_output_PSEUDONYMIZATION`. 
-
-
-The Pseudonymization method generates an extra folder named `anonymization_output_PSEUDONYMIZATION_INDEX` when run. The `_INDEX` folder contains files with the original file names but the transcripts but with `PSEUDONYMIZATION_INDEX` at the end and serves as index files with each containing the label type and the annotation values as well as their anonymized values.
+| Pre-condition                                                                                                                                   | Output                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | 
+|-------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Must have the json file inside `Annotations JSON` folder that is created from running the [GatheringAnnotations.py](GatherAnnotations.py) file. | A folder named `Anonymization Output` is created. Running an anonymization method creates a folder inside the `Anonymization Output` folder named `anonymization_output_PSEUDONYMIZATION`. <br/><br/>The Pseudonymization method generates an extra folder named `anonymization_output_PSEUDONYMIZATION_INDEX` when run. The `_INDEX` folder contains files with the original file names but the transcripts but with `PSEUDONYMIZATION_INDEX` at the end and serves as index files with each containing the label type and the annotation values as well as their anonymized values. |
 
 For example, the following is an illustration of what the directory tree looks like after running the Pseudonymization method:
 
@@ -224,14 +203,6 @@ The combined annotations are then cleaned:
 
 See [AnnotationCleaner.py](AnnotationHelpers/AnnotationCleaner.py)
 
---- 
-
-# Libraries used in anonymization:
-- bart_large_mnli - zero shot model by Facebook - https://huggingface.co/facebook/bart-large-mnli
-- inflect - https://github.com/jaraco/inflect
-- word2number - https://github.com/akshaynagpal/w2n
-
-
 ---
 
 # Anonymization Method - Pseudonymization:
@@ -241,24 +212,22 @@ The Pseudonymization method requires all entities to have their own logic. The a
 A dictionary is used in every entity to make sure the proper sequential number is assigned to the pseudonymized value.
 
 ### PERSON
-The logic consists of replacing each part of the full name with PERSON_X with X being a counter.
+The logic consists of replacing each part of names with `PERSON_X` with X being a counter.
 
-Then the other names follow the same logic.
-
-We have a John Doe and the victim is Jane Smith. ➡️ We have a [PERSON 1] [PERSON 2] and the victim is [PERSON 3] [PERSON 4].
+**Example:** We have a `John Doe` and the victim is `Jane Smith` ➡️ We have a `[PERSON 1] [PERSON 2]` and the victim is `[PERSON 3] [PERSON 4]`.
 
 ### SPELLED_NAME
 
-The spelled name is normalized and then checked into the name map. Then take whatever replacement is for that name and replace the PERSON_ part with SPELLED_NAME_PERSON_. So if Nathan Fillion has pseudonymized value of PERSON_5, then the spelled name becomes SPELLED_NAME_PERSON_5.
+The spelled name is normalized and then checked into the name map. Then take whatever replacement is for that name and replace the `PERSON_` part with `SPELLED_NAME_PERSON_`. So if `Nathan Fillion` has pseudonymized value of `PERSON_5`, then the spelled name becomes `SPELLED_NAME_PERSON_5`.
 
 ### Organization
 
 ORGANIZATION labels are pseudonymized based on their values. Values are saved in a map as well as their pseudonymized value. So that if the same value occurs, it would have the same pseudonymized value.
 
-If the organization contains certain values like Prison, Jail... the pseudonymization is set as PRISON_X, JAIL_X... With each type of organization having its own counter.
+If the organization contains certain values like Prison, Jail... the pseudonymization is set as `PRISON_X`, `JAIL_X`... With each type of organization having its own counter.
 
 ### Email
-The pseudonymization of each unique EMAIL_ADDRESS is assigned an [EMAIL_ADDRESS_1], [EMAIL_ADDRESS_2]... tag.
+The pseudonymization of each unique EMAIL_ADDRESS is assigned an `[EMAIL_ADDRESS_1]`, `[EMAIL_ADDRESS_2]`... tag.
 
 ### URL Labels
 
@@ -266,28 +235,28 @@ Same logic as EMAIL_ADDRESS labels.
 
 ### ID 
 
-Same logic. The letter part is removed and the number part is pseudonymized and saved in a map. The pseudonymized value is a tag [ID_1], [ID_2]...
+Same logic. The letter part is removed and the number part is pseudonymized and saved in a map. The pseudonymized value is a tag `[ID_1]`, `[ID_2]`...
 
 ### Location labels
 
 Same logic as the previous labels but depending on the zero shot model's answer, the location is pseudonymized like this:
-* if it's a state ➡️ STATE_X
-* Country ➡️ COUNTRY_X
+* if it's a state ➡️ `STATE_X`
+* Country ➡️ `COUNTRY_X`
 
 
 ### NRP
 
-Same logic as the LOCATION labels, depending on the zero shot classification model's answer, it could be RELIGION_X, NATIONALITY_X...
+Same logic as the LOCATION labels, depending on the zero shot classification model's answer, it could be `RELIGION_X`, `NATIONALITY_X`...
 
 ### Phone Numbers
-Each unique value is pseudonymized as PHONE_NUMBER_X...
+Each unique value is pseudonymized as `PHONE_NUMBER_X`...
 
 ### Spelled out items
 Each unique value is pseudonymized as SPELLED_OUT_ITEM...
 
 ### Date labels
 
-The DATE labels are pseudonymized based the following cases.
+The numerical values in DATE annotations are pseudonymized based the following cases.
 
 * A full date like 12/23/2016 ➡️ [DATE]
 * A year like 2013 ➡️ [YEAR]
@@ -298,8 +267,7 @@ The DATE labels are pseudonymized based the following cases.
 * Decade like 20s, 30s ➡️ [DECADE]
 
 ### Time labels
-
-Time annotations are replaced with [TIME] placeholders.
+Numerical values in Time annotations are replaced with [TIME] placeholders.
 
 ### Age
 

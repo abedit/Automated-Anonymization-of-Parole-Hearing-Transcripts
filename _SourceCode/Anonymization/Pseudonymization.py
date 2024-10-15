@@ -57,25 +57,18 @@ def anonymize(output_directory, json_data):
     else:
         HelperFunctions.clear_directory(pseudonymization_index_folder)
 
-    # specific_files = [
-    # ]
-    #
-    # start_index = 0
-    # max_files = 0
     files_pseudonymized_index_map = {}
 
     print('---------PSEUDONYMIZATION started---------')
 
     for index, hearing_text_file in enumerate(os.listdir(Constants.hearings_txt_directory)):
+        # reset the global maps
         name_mapping = {}
         org_mapping = {}
 
         if hearing_text_file.lower().endswith(Constants.text_format):
 
-            # Debug purposes
-            # if specific_files and hearing_text_file not in specific_files:
-            #     continue
-
+            # find the file and annotation data in the json file
             annotations = []
             annotations_json = [data for data in json_data if hearing_text_file == data['file']]
             if annotations_json:
@@ -83,13 +76,6 @@ def anonymize(output_directory, json_data):
 
             text = TextExtraction.extract_text_from_txt_file(hearing_text_file)
             if annotations:  # get annotation data for this file from the json
-
-                # Debug purposes
-                # if not specific_files and start_index != max_files:
-                #     if index < start_index:
-                #         continue
-                #     if index + 1 > max_files:
-                #         break
 
                 print('\n')
                 print(f'{index + 1} ----- Pseudonymizing {hearing_text_file}')
@@ -109,8 +95,7 @@ def anonymize(output_directory, json_data):
                     WriteToFiles.write_text_into_file(pseudonymized_text_output, pseudonymized_text)
                     print(index + 1, "----- [PSEUDONYMIZATION] ---", hearing_text_file, "➡", pseudonymized_file_name)
                 else:
-                    print(index + 1, "----- [PSEUDONYMIZATION] ---", hearing_text_file,
-                          " - Nothing to pseudonymized...")
+                    print(index + 1, "----- [PSEUDONYMIZATION] ---", hearing_text_file, " - Nothing to pseudonymize.")
 
     print('\n---------PSEUDONYMIZATION ended---------')
 
@@ -121,6 +106,7 @@ def anonymize(output_directory, json_data):
 
     all_files_index_file = os.path.join(pseudonymization_index_folder, 'Index.txt')
     WriteToFiles.write_text_into_file(all_files_index_file, '\n'.join(file_index_list))
+
 
 def _generate_annotation_replacements(loop_index, annotations, hearing_text_file, pseudonymization_index_folder):
     """

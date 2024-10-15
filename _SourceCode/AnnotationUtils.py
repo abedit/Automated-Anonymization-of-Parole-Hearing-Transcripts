@@ -1,4 +1,3 @@
-import concurrent.futures
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -16,7 +15,6 @@ from _SourceCode.WriteToFiles import prepare_write_statistics_into_file
 This class is the one that calls the NER tools and annotation cleaning before writing them into files.
 """
 
-
 annotation_statistics = {
     "files_count": 0,  # counter for console output
     "total_filtered_out_annotations_from_final_cleaning": [],
@@ -27,12 +25,14 @@ annotation_statistics = {
     "correct_annotations": []  # total correct annotations
 }
 
+skip_1st_page_info_presidio = False
+
 
 def hearing_text_into_annotations(
         create_annotation_output_file=False,
         insert_labels_in_text=True,
         write_statistics=False,
-        batch_size=1):
+        ignore_1st_page_info=False):
     """
     Takes the txt files in the hearings_txt folder, gets the annotations,
     cleans them and writes them into files. Process files in batches.
@@ -42,17 +42,16 @@ def hearing_text_into_annotations(
                                     to have something like [John Doe | PERSON] works in [New York | LOCATION].
 
     @param write_statistics     Write the filtered out annotations in a file
-    @param batch_size the number of how many files to be processed at the same time.
-                    This depends on the computational capabilities of the device running this program
-                    (in order words if the computer can handle multiple files at once,
-                    if unsure then leave it to 1 to process 1 file at a time)
+    @param ignore_1st_page_info  If true, stop extracting information from the transcripts' first
+                            pages and they won't be fed into Presidio.
     """
 
-    global annotation_statistics
+    global annotation_statistics, skip_1st_page_info_presidio
+
+    skip_1st_page_info_presidio = ignore_1st_page_info
 
     import nltk
-    nltk.download('punkt')
-
+    nltk.download('punkt')  # This is for StanfordNER
 
     annotation_statistics = {
         "files_count": 0,  # counter for console output
@@ -63,7 +62,6 @@ def hearing_text_into_annotations(
         "total_unfiltered_annotations_count": [],  # store the # of unfiltered annotations
         "correct_annotations": []
     }
-
 
     annotations_json = []
     directory = Constants.hearings_txt_directory
@@ -76,53 +74,16 @@ def hearing_text_into_annotations(
     print('\n')
     print('---------GATHERING ANNOTATIONS---------')
 
-    # for file in files:
-    #     if file not in specific_files:
-    #         continue
-    #     annotations = _annotations_for_file(file, directory, create_annotation_output_file, insert_labels_in_text,
-    #                                         write_statistics)
-    #     annotation_statistics['files_count'] += 1
-    #     # place the annotation data into a json file
-    #     JsonFunctions.write_data_to_json(annotations)
-
-    # ----------------------------------------------------------------------
-
-    # with concurrent.futures.ThreadPoolExecutor(max_workers=batch_size) as executor:
-    #     # Submit all files to the executor
-    #     future_to_file = {executor.submit(
-    #         _annotations_for_file,
-    #         file, directory, create_annotation_output_file, insert_labels_in_text,
-    #         write_statistics):
-    #                           file for file in files}
-    #
-    #     # As each file is completed, start processing the next one
-    #     for future in concurrent.futures.as_completed(future_to_file):
-    #         file = future_to_file[future]
-    #         try:
-    #             annotations = future.result()
-    #             annotation_statistics['files_count'] += 1
-    #             # place the annotation data into a json file
-    #             JsonFunctions.write_data_to_json(annotations)
-    #
-    #         except Exception as exc:
-    #             print(f"File {file} generated an exception: {exc}")
-
-    # ----------------------------------------------------------------------
-
-    # Divide files into batches, to process for example 2 or 3 files at a time.
-    file_batches = [files[i:i + batch_size] for i in range(0, len(files), batch_size)]
-
-    # Process each batch concurrently
-    for batch in file_batches:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=batch_size) as executor:
-            futures = {executor.submit(_annotations_for_file, file, directory, create_annotation_output_file,
-                                       insert_labels_in_text, write_statistics): file for file in batch}
-
-            for future in concurrent.futures.as_completed(futures):
-                annotations = future.result()  # Handle the result of each file's processing
-                annotation_statistics['files_count'] += 1
-                # place the annotation data into a json file
-                JsonFunctions.write_data_to_json(annotations)
+    for file in files:
+        annotations = _annotations_for_file(
+            file=file,
+            directory=directory,
+            create_annotation_output_file=create_annotation_output_file,
+            insert_labels_in_text=insert_labels_in_text,
+            write_statistics=write_statistics)
+        annotation_statistics['files_count'] += 1
+        # place the annotation data into a json file
+        JsonFunctions.write_data_to_json(annotations)
 
     # write a separate file containing the number of correct and incorrect annotations as well as the average of all files
     if write_statistics and annotation_statistics["total_annotation_count"] and annotation_statistics[
@@ -183,7 +144,7 @@ def _get_combined_annotations(text):
     inner_total_unfiltered_annotations_count = 0
     with ThreadPoolExecutor() as executor:
         futures = {
-            executor.submit(get_presidio_annotations, text): 'presidio',
+            executor.submit(get_presidio_annotations, text, skip_1st_page_info_presidio): 'presidio',
             executor.submit(get_spacy_annotations, text): 'spacy',
             executor.submit(StanfordNER().get_stanford_ner_annotations, text): 'stanford'
         }

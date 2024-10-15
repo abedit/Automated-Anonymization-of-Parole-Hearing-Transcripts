@@ -12,7 +12,7 @@ from _SourceCode.ModelClasses.Annotation import Annotation
 from _SourceCode.AnnotationHelpers.AnnotationChecker import is_invalid_annotation
 
 
-def get_presidio_analysis_results(text, threshold=0.85):
+def get_presidio_analysis_results(text, skip_1st_page_info_presidio):
     """
     Instantiate Presidio recognizers and call presidio to analyze the text
     """
@@ -32,20 +32,21 @@ def get_presidio_analysis_results(text, threshold=0.85):
     recognizer_registry.add_recognizer(PresidioRecognizers.SimplePhoneNumberRecognizer())
 
     # Add the first name recognizer patterns from the first page
-    name_recognizers, location_recognizer, organization_recognizer = get_first_page_recognizers(text)
-    if name_recognizers is not None:
-        recognizer_registry.add_recognizer(name_recognizers)
-    if organization_recognizer is not None:
-        recognizer_registry.add_recognizer(organization_recognizer)
-    if location_recognizer is not None:
-        recognizer_registry.add_recognizer(location_recognizer)
+    if not skip_1st_page_info_presidio:
+        name_recognizers, location_recognizer, organization_recognizer = get_first_page_recognizers(text)
+        if name_recognizers is not None:
+            recognizer_registry.add_recognizer(name_recognizers)
+        if organization_recognizer is not None:
+            recognizer_registry.add_recognizer(organization_recognizer)
+        if location_recognizer is not None:
+            recognizer_registry.add_recognizer(location_recognizer)
 
     analyzer = AnalyzerEngine(registry=recognizer_registry)
 
     results = analyzer.analyze(
         text=text,
         entities=Constants.presidio_labels,
-        score_threshold=threshold,
+        score_threshold=0.85,
         language='en'
     )
     total_unfiltered_annotations = len(results)
@@ -54,12 +55,12 @@ def get_presidio_analysis_results(text, threshold=0.85):
     return converted, presidio_results, total_unfiltered_annotations
 
 
-def get_presidio_annotations(text, threshold=0.85):
+def get_presidio_annotations(text, skip_1st_page_info_presidio):
     """
     get presidio annotations and merge adjacent annotations
     if they are next to each other and have the same label
     """
-    original_results, presidio_results, total_unfiltered_annotations = get_presidio_analysis_results(text, threshold)
+    original_results, presidio_results, total_unfiltered_annotations = get_presidio_analysis_results(text, skip_1st_page_info_presidio)
     merged_annotations = AnnotationCleaner.merge_adjacent_annotations(presidio_results, text)
     false_annotations = list(set(original_results) - set(merged_annotations))
     return merged_annotations, false_annotations, total_unfiltered_annotations

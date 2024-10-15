@@ -26,7 +26,7 @@ def write_statistics_for_all_files(annotation_statistics):
     and each tool's logic to filter out unlikeley annotations, the # of annotations filtered out in each entity, the # of annotations
      filtered out from the duplicates/overlap phase, the # of annotations removed in each entity, and finally the total unfiltered annotations detected
     """
-    out_file = os.path.join(Constants.annotations_dir, 'final' + Constants.text_format)
+    out_file = os.path.join(Constants.annotations_dir, 'Final' + Constants.text_format)
     with open(out_file, 'w', encoding='utf-8') as text_file:
         text_file.write(f'total (correct) annotations: {sum(annotation_statistics["total_annotation_count"])}\n\n')
 
