@@ -179,20 +179,45 @@ def utterances_one_line(text):
     current_speaker_text = []
     formatted_text = []
     lines = text.split('\n')
+
     for line in lines:
-        # Check for speaker change by checking if there's a ':'
-        if ':' in line and line.split(':')[0].isupper() and len(line.split(':')[0].split()) <= 5:
+        # Split the line at the first occurrence of ':'
+        parts = line.split(':', 1)
+        # Check for a valid speaker (name is uppercase and <= 5 words before the first colon) + (space after the colon)
+        # There was a specific case of an utterance with no text. It is kept that way in the text file as it is in the PDF.
 
-            if current_speaker_text and current_speaker:
-                formatted_text.append(f"{current_speaker}: {' '.join(current_speaker_text)}")
+        if len(parts) > 1:
+            is_valid_speaker_conditions = [
+                parts[0].isupper(), # Speakers are always uppercase
+                len(parts[0].split()) <= 10, # there's 10 or less words between the ':' and '\n'
+                (parts[1].startswith(' ') or # normal case: there's a space after the ':'
+                 parts[1].startswith(': ') or  # specific case, some transcripts have double ':'
+                 not parts[1] or # 1 specific case, the utterance is there in the PDF but empty
+                 re.match(r'^\w+ ', parts[1]) # specific case, after the ':', there is a letter with no space
+                 )
+            ]
 
-            current_speaker = line.split(':')[0].strip()
-            current_speaker_text = [line.split(':')[1].strip()] if len(line.split(':')) > 1 else []
+            if all(is_valid_speaker_conditions):
+                # Append the current speaker's text to the formatted text
+                if current_speaker:
+                    formatted_text.append(f"{current_speaker}: {' '.join(current_speaker_text)}")
+
+                # update current speaker and their text
+                current_speaker = parts[0].strip()
+                current_speaker_text = [parts[1].strip()] if parts[1].strip() else []
+
+            else:
+                # continuation of the current speaker's text
+                current_speaker_text.append(line.strip())
         else:
+            # Continuation of the current speaker's text
             current_speaker_text.append(line.strip())
 
+    # append the last speaker's text
     if current_speaker_text and current_speaker:
         formatted_text.append(f"{current_speaker}: {' '.join(current_speaker_text)}")
+
+    # join the formatted text
     return '\n\n'.join(formatted_text).replace("    ", " ").replace("   ", " ").replace("  ", " ")
 
 

@@ -76,7 +76,9 @@ def filter_spacy_results(annotations, text):
             if len(split_text) == 2:
                 text_before_new_line = split_text[0]
                 text_after_new_line = split_text[1]
-                ann.end = ann.end - len(text_after_new_line) - 1
+
+                if text_after_new_line:  # Ensure `ann.end` doesn't go negative
+                    ann.end = max(ann.end - len(text_after_new_line) - 1, 0)
                 ann.preview = text_before_new_line
             else:
                 continue
@@ -110,16 +112,18 @@ def check_if_age_begin_utterance(ann, entire_text):
     words_to_number = is_number_in_words(ann.preview)
     # since it's an utterance, it should look like this 'Inmate John: .....'
     if ':' in line:
-        split_line = line.split(':')[1]
-        distance = abs(line.find(ann.preview) - line.find(':')) - 1  # make sure the : is nearby
-        valid_conditions = [
-            ann.preview in split_line,
-            split_line.strip().endswith('.') or split_line.strip().endswith('?'),
-            distance <= 4,
-            (ann.preview.isdigit() and len(ann.preview) < 4 and int(ann.preview) < 200) or
-            (words_to_number != -1 and words_to_number < 200)
-        ]
-        return all(valid_conditions)
+        split_line = line.split(':')
+        if len(split_line) > 1 and ann.preview in line:
+            split_line = split_line[1]
+            distance = max(abs(line.find(ann.preview) - line.find(':')) - 1, 0)  # make sure the : is nearby
+            valid_conditions = [
+                ann.preview in split_line,
+                split_line.strip().endswith('.') or split_line.strip().endswith('?'),
+                distance <= 4,
+                (ann.preview.isdigit() and len(ann.preview) < 4 and int(ann.preview) < 200) or
+                (words_to_number != -1 and words_to_number < 200)
+            ]
+            return all(valid_conditions)
 
     return False
 
@@ -213,7 +217,7 @@ def convert_spacy_results_to_annotations(annotations):
             start=item.start_char,
             end=item.end_char,
             label=item.label_,
-            preview=item.text.strip(),
+            preview=item.text,
             source=Constants.SOURCE_SPACY) for item in annotations]
 
 

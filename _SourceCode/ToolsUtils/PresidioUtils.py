@@ -75,7 +75,7 @@ def convert_presidio_results_to_annotations(text, presidio_results):
             start=item.start,
             end=item.end,
             label=item.entity_type,
-            preview=text[item.start:item.end].strip(),
+            preview=text[item.start:item.end],
             source=Constants.SOURCE_PRESIDIO) for item in presidio_results]
 
 
@@ -138,18 +138,21 @@ def clean_presidio_results(annotations, text):
             ann.handle_prefixes()
             ann.handle_suffixes()
             if '\n' in ann.preview:
-                text_after_new_line = ann.preview.split('\n')[1]
-                ann.end = ann.end - len(text_after_new_line) - 1
-                ann.preview = ann.preview.split('\n')[0]
+                split_preview = ann.preview.split('\n')
+                text_after_new_line = split_preview[1] if len(split_preview) > 1 else ''
+                # Prevent ann.end from going negative
+                ann.end = max(ann.end - len(text_after_new_line) - 1, 0)
+                ann.preview = split_preview[0]
 
             ann.handle_spelled_name_in_person_name()
 
             # Very specific case. Sometimes the person's name is written like so I.CARDOZA.
             # Presidio already detects CARDOZA but not the 'I.' part.
             # We check if there's a space before it to make sure it's not words stuck with a period in between
-            if text[ann.start - 1] == '.' and text[ann.start - 2].isalpha() and text[ann.start - 3] == ' ':
-                ann.start = ann.start - 2
-                ann.preview = text[ann.start:ann.end]
+            if ann.start >= 3:
+                if text[ann.start - 1] == '.' and text[ann.start - 2].isalpha() and text[ann.start - 3] == ' ':
+                    ann.start = ann.start - 2
+                    ann.preview = text[ann.start:ann.end]
             clean_person_annotation(ann, person_names)
 
         if ann.label != Constants.LABEL_SPELLED_OUT_ITEM:
@@ -186,7 +189,7 @@ def clean_presidio_results(annotations, text):
                 continue
             if ann.preview.endswith('.') or ann.preview.endswith('?'):
                 ann.preview = ann.preview[:-1]
-                ann.end = ann.end - 1
+                ann.end = max(ann.end - 1, 0)
 
         if any(conditions):
             continue
@@ -210,7 +213,7 @@ def clean_person_annotation(ann, person_names):
         ann.label = Constants.LABEL_LOCATION
     if ':' in ann.preview:
         name = ann.preview.split(':')[0]
-        ann.end -= len(ann.preview) - len(name)
+        ann.end = max(ann.end - (len(ann.preview) - len(name)), 0)
         ann.preview = name
     if ann.preview.lower().endswith(' through interpreter'):
         size = len(' through interpreter')
@@ -234,15 +237,16 @@ def fix_age_annotation(result, text):
         result.start = result.start + len(text.split()[0]) + space_count
         result.preview = result.preview[len(text.split()[0]) + space_count:]
 
-        if text.endswith(('.', '?', ',')):
-            result.end = result.end - 1
+        if text.endswith(('.', '?', ',')) and result.preview:
+            result.end = max(result.end - 1, 0)  # Ensure result.end does not go below zero
             result.preview = result.preview[:-1]
-        return
-    elif text.startswith(': '):
-        result.start = result.start + 2
+            return
+    elif text.startswith(': ') and len(result.preview) > 2:
+        result.start += 2
         result.preview = result.preview[2:]
-    if text.endswith(('.', '?', ',')):
-        result.end = result.end - 1
+
+    if text.endswith(('.', '?', ',')) and result.preview:
+        result.end = max(result.end - 1, 0)
         result.preview = result.preview[:-1]
 
 
@@ -251,5 +255,5 @@ def fix_date_annotation(result, text):
     Fixes date annotation caught from the SimpleDateRecognizer
     """
     matches_2 = re.search(PresidioRecognizers.SimpleDateRecognizer.year_in_sentence_pattern, text)
-    if matches_2:
-        result.start = result.start + len(matches_2[1]) + 1  # remove the prepositions in the beginning
+    if matches_2 and matches_2.lastindex and matches_2.lastindex >= 1:
+        result.start += len(matches_2[1]) + 1  # remove the prepositions in the beginning

@@ -29,7 +29,7 @@ def insert_into_annotations(
     if organizations is None:
         organizations = list()
     for annotation in annotations:
-        match (annotation.label):
+        match annotation.label:
             case Constants.LABEL_PERSON:
                 if names:
                     name = clean_name(annotation.preview).title()

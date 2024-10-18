@@ -59,18 +59,16 @@ class Annotation:
             '<UNINTELLIGIBLE>', '<UNINTELLIGIBLE', 'UNINTELLIGIBLE>', 'UNINTELLIGIBLE',
             '<', '> ', 'a ', 'an ', 'A ', 'An ', 'AN ', 'the ', '.', 'Niece\n ', 'Niece ',
 
-
         ]
         for prefix in possible_prefixes:
             if self.preview.startswith(prefix):
                 split_text = self.preview.split(prefix, 1)
-                if split_text[1]:
+                if len(split_text) > 1 and split_text[1]:
                     self.start = self.start + len(prefix)
                     self.preview = split_text[1]
                     if self.preview.startswith(' '):
                         self.start += 1
                         self.preview = self.preview[1:]
-
 
         if self.preview.lower().startswith('inmate '):
             split_text = self.preview.split()
@@ -88,11 +86,9 @@ class Annotation:
         for suffix in possible_suffixes:
             if self.preview.endswith(suffix):
                 split_text = self.preview.split(suffix, 1)
-                if split_text[0]:
+                if len(split_text) > 0 and split_text[0]:
                     self.end = self.end - len(suffix)
                     self.preview = split_text[0]
-
-
 
     def handle_spelled_name_in_person_name(self):
         """

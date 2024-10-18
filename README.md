@@ -59,7 +59,7 @@ Please download `pytorch_model.bin` file from the official website for BART on h
 # How to run the project:
 
 This section explains how to run the project.
-There are **3** main classes that can be run with each having a pre-condition that needs to be satisfied.
+There are **3** main classes that can be run **with each having a pre-condition that needs to be satisfied for a proper execution**.
 
 ## Converting the transcript files into text files
 The purpose of [HearingsPDFs2Text.py](HearingsPDFs2Text.py) is to convert transcripts PDF files into text files (txt file format) with each utterance being on a single line and ignoring the second page as it's only the index and does not have important information.
@@ -82,6 +82,18 @@ Running [GatherAnnotations.py](GatherAnnotations.py) file will initialize and ap
 ### Command to run [GatherAnnotations.py](GatherAnnotations.py):
 
     python GatherAnnotations.py
+
+
+### ❗Ignoring 1st page information❗
+If you are running the program on files that don't have the same format as the CDCR transcripts, you may encounter errors due to information in the first page being fed into Presidio and resulting in wrong annotations. 
+
+If you want to avoid this, you can pass the argument `--ignore_1stPage` to skip the step of extracting and feeding the first page information into Presidio. The command will look like this:
+
+    python GatherAnnotations.py --ignore_1stPage
+
+‎ 
+
+[//]: # (Empty character to force README to add a new empty line)
 
 
 | Pre-condition                                                                                                                          | Output                                                                                                                                                                                                                                                                                                                                                                          | 
@@ -192,9 +204,9 @@ See [AnnotationChecker.py](AnnotationHelpers/AnnotationChecker.py).
 
 
 # Annotation Post-processing
-The annotations retrieved from all 3 tools are then placed together. In Presidio's case and StandfordNER's case, the adjacent annotations are merged. For example: John (PERSON) Doe (PERSON) is a person.
+The annotations retrieved from all 3 tools are then placed together. In Presidio's case and StandfordNER's case, the adjacent annotations are merged. For example: `John` (PERSON) `Doe` (PERSON) is a person.
 
-If the annotations are separated by a space and they are the same label (PERSON), it's best to put them together: John Doe (PERSON).
+If the annotations are separated by a space and they are the same label (PERSON), it's best to put them together: `John Doe` (PERSON).
 
 The combined annotations are then cleaned: 
 - Duplicates are removed

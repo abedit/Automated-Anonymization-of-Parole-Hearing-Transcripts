@@ -80,7 +80,8 @@ class StanfordNER:
 
                 if '\n' in ann.preview:
                     text_after_new_line = ann.preview.split('\n')[1]
-                    ann.end = ann.end - len(text_after_new_line) - 1
+                    new_end = ann.end - len(text_after_new_line) - 1
+                    ann.end = max(new_end, 0)  # so that ann.end doesn't go negative
                     ann.preview = ann.preview.split('\n')[0]
 
                 ann.handle_spelled_name_in_person_name()
