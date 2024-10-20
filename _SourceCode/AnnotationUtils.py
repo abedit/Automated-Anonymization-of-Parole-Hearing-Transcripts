@@ -51,6 +51,7 @@ def hearing_text_into_annotations(
     skip_1st_page_info_presidio = ignore_1st_page_info
 
     import nltk
+    print("Downloading pacakge for StanfordNER.\n")
     nltk.download('punkt')  # This is for StanfordNER
 
     annotation_statistics = {
